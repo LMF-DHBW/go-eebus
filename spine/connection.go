@@ -1,10 +1,13 @@
 package spine
 
 import (
+	"encoding/xml"
+	"log"
+	"strings"
+	"time"
+
 	"github.com/LMF-DHBW/go-eebus/ressources"
 	"github.com/LMF-DHBW/go-eebus/ship"
-	"log"
-	"time"
 )
 
 type Notifier func(ressources.DatagramType, SpineConnection)
@@ -41,7 +44,7 @@ func NewSpineConnection(SME *ship.SMEInstance, ownDevice *ressources.DeviceModel
 }
 
 func (conn *SpineConnection) SendXML(header *ressources.HeaderType, payload *ressources.PayloadType) {
-	log.Println("Sending: ", header.CmdClassifier)
+	conn.MsgCounter++
 	conn.SME.Send(ressources.DatagramType{header, payload})
 }
 
@@ -55,7 +58,8 @@ func (conn *SpineConnection) StartRecieveHandler() {
 		featureSource := datagram.Header.AddressSource.Feature
 		isValidRequest := len(conn.OwnDevice.Entities) > entitiyAddr && len(conn.OwnDevice.Entities[entitiyAddr].Features) > featureAddr
 		if isValidRequest {
-			log.Println("Received: ", datagram.Header.CmdClassifier)
+			conn.MsgCounter = ressources.Max(conn.MsgCounter, datagram.Header.MsgCounter)
+
 			feature := conn.OwnDevice.Entities[entitiyAddr].Features[featureAddr]
 			var function *ressources.FunctionModel
 			for _, v := range feature.Functions {
@@ -111,6 +115,18 @@ func (conn *SpineConnection) StartRecieveHandler() {
 					conn.processBindingRequest(&datagram)
 				} else if datagram.Payload.Cmd.FunctionName == "nodeManagementSubscriptionRequestCall" {
 					conn.processSubscriptionRequest(&datagram)
+				}
+			case "comissioning":
+				if conn.DiscoveryInformation.DeviceInformation.Description.DeviceType == "Gateway" {
+					if datagram.Payload.Cmd.FunctionName == "saveSkis" {
+						log.Println("Saving new SKIs")
+
+						var Function *ressources.ComissioningNewSkis
+						err := xml.Unmarshal([]byte(datagram.Payload.Cmd.Function), &Function)
+						if err == nil {
+							ship.WriteSkis(strings.Split(Function.Skis, "\n"), strings.Split(Function.Devices, "\n"))
+						}
+					}
 				}
 			}
 		}

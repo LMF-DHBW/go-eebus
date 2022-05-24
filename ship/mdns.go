@@ -1,15 +1,8 @@
 package ship
 
 import (
-	"bufio"
 	"context"
-	"crypto/rsa"
-	"crypto/sha1"
-	"crypto/x509"
-	"encoding/hex"
-	"encoding/pem"
 	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -54,42 +47,4 @@ func (shipNode *ShipNode) RegisterDns() {
 	defer log.Println("Registering stopped")
 	// Shutdown server after 2 minutes
 	<-time.After(time.Second * 120)
-}
-
-/************ Comminssioning ************/
-
-func readSkis() []string {
-	file, err := os.Open("skis.txt")
-	ressources.CheckError(err)
-	defer file.Close()
-
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	ressources.CheckError(scanner.Err())
-	return lines
-}
-
-func (shipNode *ShipNode) getSki() string {
-	var file []byte
-	var err error
-
-	file, err = os.ReadFile(shipNode.CertName + ".crt")
-	ressources.CheckError(err)
-
-	crt := string(file)
-
-	block, _ := pem.Decode([]byte(crt))
-	var cert *x509.Certificate
-	cert, _ = x509.ParseCertificate(block.Bytes)
-	pubkey := cert.PublicKey.(*rsa.PublicKey)
-
-	publicKey, err := x509.MarshalPKIXPublicKey(pubkey)
-	ressources.CheckError(err)
-
-	hasher := sha1.New()
-	hasher.Write(publicKey)
-	return hex.EncodeToString(hasher.Sum(nil))
 }

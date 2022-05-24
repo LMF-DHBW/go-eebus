@@ -2,6 +2,8 @@ package spine
 
 import (
 	"log"
+	"strings"
+	"time"
 
 	"github.com/LMF-DHBW/go-eebus/ressources"
 	"github.com/LMF-DHBW/go-eebus/ship"
@@ -31,11 +33,40 @@ func (spineNode *SpineNode) Start() {
 	spineNode.ShipNode.Start()
 }
 
-func (spineNode *SpineNode) newConnection(SME *ship.SMEInstance) {
-	newSpineConnection := NewSpineConnection(SME, spineNode.DeviceStructure, spineNode.newBindSubscribe, spineNode.SubscriptionNofity)
-	spineNode.Connections = append(spineNode.Connections, newSpineConnection)
+func (spineNode *SpineNode) newConnection(SME *ship.SMEInstance, newSki string) {
 
-	go newSpineConnection.StartDetailedDiscovery()
+	newSpineConnection := NewSpineConnection(SME, spineNode.DeviceStructure, spineNode.newBindSubscribe, spineNode.SubscriptionNofity)
+
+	go func() {
+
+		newSpineConnection.StartDetailedDiscovery()
+
+		if spineNode.ShipNode.IsGateway {
+
+			time.Sleep(time.Second / 10)
+			skis, devices := ship.ReadSkis()
+			newSpineConnection.SendXML(newSpineConnection.OwnDevice.MakeHeader(0, 0, ressources.MakeFeatureAddress("", 0, 0), "comissioning", newSpineConnection.MsgCounter, false), ressources.MakePayload("saveSkis", &ressources.ComissioningNewSkis{
+				Skis:    strings.Join(skis, "\n"),
+				Devices: strings.Join(devices, "\n"),
+			}))
+
+			if newSki != "" {
+				ship.WriteSkis(append(skis, newSki), append(devices, newSpineConnection.Address))
+
+				skis, devices := ship.ReadSkis()
+				log.Println("Sending new SKIs")
+				for _, conn := range spineNode.Connections {
+					conn.SendXML(conn.OwnDevice.MakeHeader(0, 0, ressources.MakeFeatureAddress("", 0, 0), "comissioning", conn.MsgCounter, false), ressources.MakePayload("saveSkis", &ressources.ComissioningNewSkis{
+						Skis:    strings.Join(skis, "\n"),
+						Devices: strings.Join(devices, "\n"),
+					}))
+				}
+			}
+		}
+
+		spineNode.Connections = append(spineNode.Connections, newSpineConnection)
+
+	}()
 
 	newSpineConnection.StartRecieveHandler()
 }

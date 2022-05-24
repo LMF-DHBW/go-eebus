@@ -2,6 +2,7 @@ package spine
 
 import (
 	"encoding/xml"
+	"log"
 
 	"github.com/LMF-DHBW/go-eebus/ressources"
 )
@@ -15,6 +16,7 @@ func (conn *SpineConnection) StartDetailedDiscovery() {
 		var Function *ressources.NodeManagementDetailedDiscovery
 		err := xml.Unmarshal([]byte(answer.Payload.Cmd.Function), &Function)
 		if err == nil {
+			log.Println("Discovery finished")
 			conn.DiscoveryInformation = Function
 			// Device discovery request correct
 			for _, Entity := range conn.OwnDevice.Entities {

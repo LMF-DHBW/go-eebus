@@ -17,14 +17,14 @@ import (
 )
 
 type ConnectionManager func(string, *websocket.Conn)
-type ConnectionManagerSpine func(*SMEInstance)
+type ConnectionManagerSpine func(*SMEInstance, string)
 type CloseHandler func(*SMEInstance)
 type handler func([]byte)
 type dataHandler func(ressources.DatagramType)
 
 type ShipNode struct {
 	serverPort            int
-	isGateway             bool
+	IsGateway             bool
 	SME                   []*SMEInstance
 	Requests              []*Request
 	SpineConnectionNotify ConnectionManagerSpine
@@ -38,9 +38,9 @@ type Request struct {
 	Ski  string
 }
 
-func NewShipNode(isGateway bool, certName string) *ShipNode {
+func NewShipNode(IsGateway bool, certName string) *ShipNode {
 	// Empty Ship node has empty list of clients and no server
-	return &ShipNode{0, isGateway, make([]*SMEInstance, 0), make([]*Request, 0), nil, nil, certName}
+	return &ShipNode{0, IsGateway, make([]*SMEInstance, 0), make([]*Request, 0), nil, nil, certName}
 }
 
 func (shipNode *ShipNode) Start() {
@@ -49,7 +49,7 @@ func (shipNode *ShipNode) Start() {
 	ressources.CheckError(err)
 	shipNode.serverPort = port
 	// Start server, Register Dns and search for other DNS entries
-	if !shipNode.isGateway {
+	if !shipNode.IsGateway {
 		go shipNode.StartServer()
 		go shipNode.RegisterDns()
 
@@ -61,16 +61,16 @@ func (shipNode *ShipNode) handleFoundService(entry *zeroconf.ServiceEntry) {
 	// If found service is not on same device
 	if entry.Port != shipNode.serverPort {
 		log.Println("Found new service", entry.HostName, entry.Port)
-		//shipNode.Connect("localhost", strconv.Itoa(entry.Port))
 
-		if shipNode.isGateway {
+		if shipNode.IsGateway {
 			shipNode.Requests = append(shipNode.Requests, &Request{
 				Port: strconv.Itoa(entry.Port),
 				Id:   strings.Split(entry.Text[1], "=")[1],
 				Ski:  strings.Split(entry.Text[3], "=")[1],
 			})
 		} else {
-			if ressources.StringInSlice(strings.Split(entry.Text[3], "=")[1], readSkis()) {
+			skis, _ := ReadSkis()
+			if ressources.StringInSlice(strings.Split(entry.Text[3], "=")[1], skis) {
 				// Device is trusted
 				go shipNode.Connect("localhost", strconv.Itoa(entry.Port), strings.Split(entry.Text[3], "=")[1])
 			}
@@ -81,10 +81,16 @@ func (shipNode *ShipNode) handleFoundService(entry *zeroconf.ServiceEntry) {
 /* Procedure for new conncetions
 1. Create SME instance and append to list from SHIP node
 2. Start CME handshake
-3. Start Hello handshake -> Maybe skip for now, skip protocol handshake and pin exchange
-4. Start data exchange -> notify spine
+3. Start data exchange -> notify spine
+(Skip Hello handshake, protocol handshake and pin exchange)
 */
 func (shipNode *ShipNode) newConnection(role string, conn *websocket.Conn, ski string) {
+	skiIsNew := ""
+	skis, _ := ReadSkis()
+	if !ressources.StringInSlice(ski, skis) && shipNode.IsGateway {
+		skiIsNew = ski
+	}
+
 	newSME := &SMEInstance{role, "INIT", conn, shipNode.SpineCloseHandler, ski}
 
 	for _, e := range shipNode.SME {
@@ -97,7 +103,7 @@ func (shipNode *ShipNode) newConnection(role string, conn *websocket.Conn, ski s
 	shipNode.SME = append(shipNode.SME, newSME)
 
 	newSME.StartCMI()
-	shipNode.SpineConnectionNotify(newSME)
+	shipNode.SpineConnectionNotify(newSME, skiIsNew)
 }
 
 func (shipNode *ShipNode) Connect(host string, port string, ski string) {
@@ -106,7 +112,6 @@ func (shipNode *ShipNode) Connect(host string, port string, ski string) {
 	conf, err := websocket.NewConfig(service, "http://localhosts")
 	ressources.CheckError(err)
 
-	// cert, err := tls.LoadX509KeyPair("client.crt", "client.key")
 	var cert tls.Certificate
 	cert, err = tls.LoadX509KeyPair(shipNode.CertName+".crt", shipNode.CertName+".key")
 	ressources.CheckError(err)
@@ -118,11 +123,6 @@ func (shipNode *ShipNode) Connect(host string, port string, ski string) {
 	conn, err := websocket.DialConfig(conf)
 	ressources.CheckError(err)
 
-	// publickey := conn.Request().TLS.PeerCertificates[0].RawSubjectPublicKeyInfo
-
-	// hasher := sha1.New()
-	// hasher.Write(publickey)
-	// shipNode.newConnection("client", conn, hex.EncodeToString(hasher.Sum(nil)))
 	shipNode.newConnection("client", conn, ski)
 }
 
