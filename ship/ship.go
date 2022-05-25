@@ -30,6 +30,9 @@ type ShipNode struct {
 	SpineConnectionNotify ConnectionManagerSpine
 	SpineCloseHandler     CloseHandler
 	CertName              string
+	devId                 string
+	brand                 string
+	devType               string
 }
 
 type Request struct {
@@ -38,9 +41,9 @@ type Request struct {
 	Ski  string
 }
 
-func NewShipNode(IsGateway bool, certName string) *ShipNode {
+func NewShipNode(IsGateway bool, certName string, devId string, brand string, devType string) *ShipNode {
 	// Empty Ship node has empty list of clients and no server
-	return &ShipNode{0, IsGateway, make([]*SMEInstance, 0), make([]*Request, 0), nil, nil, certName}
+	return &ShipNode{0, IsGateway, make([]*SMEInstance, 0), make([]*Request, 0), nil, nil, certName, devId, brand, devType}
 }
 
 func (shipNode *ShipNode) Start() {
@@ -62,17 +65,17 @@ func (shipNode *ShipNode) handleFoundService(entry *zeroconf.ServiceEntry) {
 	if entry.Port != shipNode.serverPort {
 		log.Println("Found new service", entry.HostName, entry.Port)
 
-		if shipNode.IsGateway {
-			shipNode.Requests = append(shipNode.Requests, &Request{
-				Port: strconv.Itoa(entry.Port),
-				Id:   strings.Split(entry.Text[1], "=")[1],
-				Ski:  strings.Split(entry.Text[3], "=")[1],
-			})
+		skis, _ := ReadSkis()
+		if ressources.StringInSlice(strings.Split(entry.Text[3], "=")[1], skis) {
+			// Device is trusted
+			go shipNode.Connect("localhost", strconv.Itoa(entry.Port), strings.Split(entry.Text[3], "=")[1])
 		} else {
-			skis, _ := ReadSkis()
-			if ressources.StringInSlice(strings.Split(entry.Text[3], "=")[1], skis) {
-				// Device is trusted
-				go shipNode.Connect("localhost", strconv.Itoa(entry.Port), strings.Split(entry.Text[3], "=")[1])
+			if shipNode.IsGateway {
+				shipNode.Requests = append(shipNode.Requests, &Request{
+					Port: strconv.Itoa(entry.Port),
+					Id:   strings.Split(entry.Text[6], "=")[1] + " " + strings.Split(entry.Text[5], "=")[1] + " " + strings.Split(entry.Text[1], "=")[1],
+					Ski:  strings.Split(entry.Text[3], "=")[1],
+				})
 			}
 		}
 	}

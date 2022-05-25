@@ -124,7 +124,7 @@ func (conn *SpineConnection) StartRecieveHandler() {
 						var Function *ressources.ComissioningNewSkis
 						err := xml.Unmarshal([]byte(datagram.Payload.Cmd.Function), &Function)
 						if err == nil {
-							ship.WriteSkis(strings.Split(Function.Skis, "\n"), strings.Split(Function.Devices, "\n"))
+							ship.WriteSkis(strings.Split(Function.Skis, ";"), strings.Split(Function.Devices, ";"))
 						}
 					}
 				}

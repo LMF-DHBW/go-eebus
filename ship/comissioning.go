@@ -30,8 +30,10 @@ func ReadSkis() ([]string, []string) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.Split(scanner.Text(), ",")
-		skis = append(skis, line[0])
-		devices = append(devices, line[1])
+		if len(line) > 1 {
+			skis = append(skis, line[0])
+			devices = append(devices, line[1])
+		}
 	}
 	ressources.CheckError(scanner.Err())
 	return skis, devices

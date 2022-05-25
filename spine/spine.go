@@ -23,8 +23,8 @@ type BindSubscribe struct {
 	BindSubscribeEntry *ressources.BindSubscribeEntry
 }
 
-func NewSpineNode(isGateway bool, deviceModel *ressources.DeviceModel, SubscriptionNofity Notifier, certName string) *SpineNode {
-	return &SpineNode{ship.NewShipNode(isGateway, certName), make([]*SpineConnection, 0), deviceModel, make([]*BindSubscribe, 0), make([]*BindSubscribe, 0), SubscriptionNofity}
+func NewSpineNode(isGateway bool, deviceModel *ressources.DeviceModel, SubscriptionNofity Notifier, certName string, devId string, brand string, devType string) *SpineNode {
+	return &SpineNode{ship.NewShipNode(isGateway, certName, devId, brand, devType), make([]*SpineConnection, 0), deviceModel, make([]*BindSubscribe, 0), make([]*BindSubscribe, 0), SubscriptionNofity}
 }
 
 func (spineNode *SpineNode) Start() {
@@ -46,8 +46,8 @@ func (spineNode *SpineNode) newConnection(SME *ship.SMEInstance, newSki string) 
 			time.Sleep(time.Second / 10)
 			skis, devices := ship.ReadSkis()
 			newSpineConnection.SendXML(newSpineConnection.OwnDevice.MakeHeader(0, 0, ressources.MakeFeatureAddress("", 0, 0), "comissioning", newSpineConnection.MsgCounter, false), ressources.MakePayload("saveSkis", &ressources.ComissioningNewSkis{
-				Skis:    strings.Join(skis, "\n"),
-				Devices: strings.Join(devices, "\n"),
+				Skis:    strings.Join(skis, ";"),
+				Devices: strings.Join(devices, ";"),
 			}))
 
 			if newSki != "" {
@@ -57,8 +57,8 @@ func (spineNode *SpineNode) newConnection(SME *ship.SMEInstance, newSki string) 
 				log.Println("Sending new SKIs")
 				for _, conn := range spineNode.Connections {
 					conn.SendXML(conn.OwnDevice.MakeHeader(0, 0, ressources.MakeFeatureAddress("", 0, 0), "comissioning", conn.MsgCounter, false), ressources.MakePayload("saveSkis", &ressources.ComissioningNewSkis{
-						Skis:    strings.Join(skis, "\n"),
-						Devices: strings.Join(devices, "\n"),
+						Skis:    strings.Join(skis, ";"),
+						Devices: strings.Join(devices, ";"),
 					}))
 				}
 			}

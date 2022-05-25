@@ -35,10 +35,12 @@ func (shipNode *ShipNode) BrowseDns() {
 func (shipNode *ShipNode) RegisterDns() {
 	// Define values for DNS entry
 	port := strconv.Itoa(shipNode.serverPort)
-	id := "DEVICE-EEB01-0001.local."
+	id := "DEVICE-EEB01-" + shipNode.devId + ".local."
 	ski := shipNode.getSki()
+	brand := shipNode.brand
+	devType := shipNode.devType
 
-	txtRecord := []string{"txtvers=1", "id=" + id, "path=wss://localhost:" + port, "SKI=" + ski, "register=true"}
+	txtRecord := []string{"txtvers=1", "id=" + id, "path=wss://localhost:" + port, "SKI=" + ski, "register=true", "brand=" + brand, "type=" + devType}
 	log.Println("Registering: ", txtRecord)
 	server, err := zeroconf.Register("Device "+port, "_ship._tcp", "local.", shipNode.serverPort, txtRecord, nil)
 	ressources.CheckError(err)
