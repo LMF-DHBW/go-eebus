@@ -37,7 +37,7 @@ type ShipNode struct {
 }
 
 type Request struct {
-	Port string
+	Path string
 	Id   string
 	Ski  string
 }
@@ -73,7 +73,7 @@ func (shipNode *ShipNode) handleFoundService(entry *zeroconf.ServiceEntry) {
 		} else {
 			if shipNode.IsGateway {
 				shipNode.Requests = append(shipNode.Requests, &Request{
-					Port: strconv.Itoa(entry.Port),
+					Path: strings.Split(entry.Text[2], "=")[1],
 					Id:   strings.Split(entry.Text[6], "=")[1] + " " + strings.Split(entry.Text[5], "=")[1] + " " + strings.Split(entry.Text[1], "=")[1],
 					Ski:  strings.Split(entry.Text[3], "=")[1],
 				})
