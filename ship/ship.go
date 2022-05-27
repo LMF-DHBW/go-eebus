@@ -24,6 +24,7 @@ type dataHandler func(ressources.DatagramType)
 
 type ShipNode struct {
 	serverPort            int
+	hostname              string
 	IsGateway             bool
 	SME                   []*SMEInstance
 	Requests              []*Request
@@ -41,9 +42,9 @@ type Request struct {
 	Ski  string
 }
 
-func NewShipNode(IsGateway bool, certName string, devId string, brand string, devType string) *ShipNode {
+func NewShipNode(hostname string, IsGateway bool, certName string, devId string, brand string, devType string) *ShipNode {
 	// Empty Ship node has empty list of clients and no server
-	return &ShipNode{0, IsGateway, make([]*SMEInstance, 0), make([]*Request, 0), nil, nil, certName, devId, brand, devType}
+	return &ShipNode{0, hostname, IsGateway, make([]*SMEInstance, 0), make([]*Request, 0), nil, nil, certName, devId, brand, devType}
 }
 
 func (shipNode *ShipNode) Start() {
@@ -68,7 +69,7 @@ func (shipNode *ShipNode) handleFoundService(entry *zeroconf.ServiceEntry) {
 		skis, _ := ReadSkis()
 		if ressources.StringInSlice(strings.Split(entry.Text[3], "=")[1], skis) {
 			// Device is trusted
-			go shipNode.Connect("localhost", strconv.Itoa(entry.Port), strings.Split(entry.Text[3], "=")[1])
+			go shipNode.Connect(strings.Split(entry.Text[2], "=")[1], strings.Split(entry.Text[3], "=")[1])
 		} else {
 			if shipNode.IsGateway {
 				shipNode.Requests = append(shipNode.Requests, &Request{
@@ -109,10 +110,8 @@ func (shipNode *ShipNode) newConnection(role string, conn *websocket.Conn, ski s
 	shipNode.SpineConnectionNotify(newSME, skiIsNew)
 }
 
-func (shipNode *ShipNode) Connect(host string, port string, ski string) {
-	service := "wss://" + host + ":" + port
-
-	conf, err := websocket.NewConfig(service, "http://localhosts")
+func (shipNode *ShipNode) Connect(service string, ski string) {
+	conf, err := websocket.NewConfig(service, "http://"+shipNode.hostname)
 	ressources.CheckError(err)
 
 	var cert tls.Certificate

@@ -14,10 +14,10 @@ type EebusNode struct {
 
 type Updater func(ressources.DatagramType, spine.SpineConnection)
 
-func NewEebusNode(isGateway bool, certName string, devId string, brand string, devType string) *EebusNode {
+func NewEebusNode(hostname string, isGateway bool, certName string, devId string, brand string, devType string) *EebusNode {
 	deviceModel := &ressources.DeviceModel{}
 	newEebusNode := &EebusNode{isGateway, nil, deviceModel, nil}
-	newEebusNode.SpineNode = spine.NewSpineNode(isGateway, deviceModel, newEebusNode.SubscriptionNofity, certName, devId, brand, devType)
+	newEebusNode.SpineNode = spine.NewSpineNode(hostname, isGateway, deviceModel, newEebusNode.SubscriptionNofity, certName, devId, brand, devType)
 	return newEebusNode
 }
 

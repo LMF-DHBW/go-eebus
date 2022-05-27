@@ -23,8 +23,8 @@ type BindSubscribe struct {
 	BindSubscribeEntry *ressources.BindSubscribeEntry
 }
 
-func NewSpineNode(isGateway bool, deviceModel *ressources.DeviceModel, SubscriptionNofity Notifier, certName string, devId string, brand string, devType string) *SpineNode {
-	return &SpineNode{ship.NewShipNode(isGateway, certName, devId, brand, devType), make([]*SpineConnection, 0), deviceModel, make([]*BindSubscribe, 0), make([]*BindSubscribe, 0), SubscriptionNofity}
+func NewSpineNode(hostname string, isGateway bool, deviceModel *ressources.DeviceModel, SubscriptionNofity Notifier, certName string, devId string, brand string, devType string) *SpineNode {
+	return &SpineNode{ship.NewShipNode(hostname, isGateway, certName, devId, brand, devType), make([]*SpineConnection, 0), deviceModel, make([]*BindSubscribe, 0), make([]*BindSubscribe, 0), SubscriptionNofity}
 }
 
 func (spineNode *SpineNode) Start() {
