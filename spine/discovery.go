@@ -4,16 +4,16 @@ import (
 	"encoding/xml"
 	"log"
 
-	"github.com/LMF-DHBW/go-eebus/ressources"
+	"github.com/LMF-DHBW/go-eebus/resources"
 )
 
 func (conn *SpineConnection) StartDetailedDiscovery() {
 	funct := conn.OwnDevice.Entities[0].Features[0].Functions[0].Function
-	conn.SendXML(conn.OwnDevice.MakeHeader(0, 0, ressources.MakeFeatureAddress("", 0, 0), "read", conn.MsgCounter, false), ressources.MakePayload("nodeManagementDetailedDiscoveryData", funct))
+	conn.SendXML(conn.OwnDevice.MakeHeader(0, 0, resources.MakeFeatureAddress("", 0, 0), "read", conn.MsgCounter, false), resources.MakePayload("nodeManagementDetailedDiscoveryData", funct))
 	answer, ok := conn.RecieveTimeout(10)
 	if ok {
 		conn.Address = answer.Header.AddressSource.Device
-		var Function *ressources.NodeManagementDetailedDiscovery
+		var Function *resources.NodeManagementDetailedDiscovery
 		err := xml.Unmarshal([]byte(answer.Payload.Cmd.Function), &Function)
 		if err == nil {
 			log.Println("Discovery finished")
@@ -26,7 +26,7 @@ func (conn *SpineConnection) StartDetailedDiscovery() {
 						destEntity := FeatureInformation.Description.FeatureAddress.Entity
 						destFeature := FeatureInformation.Description.FeatureAddress.Feature
 
-						ownAddr := ressources.FeatureAddressType{
+						ownAddr := resources.FeatureAddressType{
 							conn.OwnDevice.DeviceAddress,
 							Entity.EntityAddress,
 							Feature.FeatureAddress,
@@ -36,20 +36,20 @@ func (conn *SpineConnection) StartDetailedDiscovery() {
 						numSubscriptions := conn.CountSubscriptions(ownAddr)
 
 						if Feature.BindingTo != nil &&
-							ressources.StringInSlice(FeatureInformation.Description.FeatureType, Feature.BindingTo) &&
+							resources.StringInSlice(FeatureInformation.Description.FeatureType, Feature.BindingTo) &&
 							(FeatureInformation.Description.Role == "server" || FeatureInformation.Description.Role == "special") &&
 							conn.OwnDevice.Entities[Entity.EntityAddress].Features[Feature.FeatureAddress].MaxBindings > numBindings {
 							conn.sendBindingRequest(Entity.EntityAddress, Feature.FeatureAddress,
-								ressources.MakeFeatureAddress(destDevice, destEntity, destFeature),
+								resources.MakeFeatureAddress(destDevice, destEntity, destFeature),
 								FeatureInformation.Description.FeatureType)
 						}
 
 						if Feature.SubscriptionTo != nil &&
-							ressources.StringInSlice(FeatureInformation.Description.FeatureType, Feature.SubscriptionTo) &&
+							resources.StringInSlice(FeatureInformation.Description.FeatureType, Feature.SubscriptionTo) &&
 							(FeatureInformation.Description.Role == "server" || FeatureInformation.Description.Role == "special") &&
 							conn.OwnDevice.Entities[Entity.EntityAddress].Features[Feature.FeatureAddress].MaxSubscriptions > numSubscriptions {
 							conn.sendSubscriptionRequest(Entity.EntityAddress, Feature.FeatureAddress,
-								ressources.MakeFeatureAddress(destDevice, destEntity, destFeature),
+								resources.MakeFeatureAddress(destDevice, destEntity, destFeature),
 								FeatureInformation.Description.FeatureType)
 						}
 					}

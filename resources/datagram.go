@@ -1,4 +1,4 @@
-package ressources
+package resources
 
 const SPECIFICATION_VERSION = "1.0.0"
 

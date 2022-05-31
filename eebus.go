@@ -1,27 +1,27 @@
 package go_eebus
 
 import (
-	"github.com/LMF-DHBW/go-eebus/ressources"
+	"github.com/LMF-DHBW/go-eebus/resources"
 	"github.com/LMF-DHBW/go-eebus/spine"
 )
 
 type EebusNode struct {
 	isGateway       bool
 	SpineNode       *spine.SpineNode
-	DeviceStructure *ressources.DeviceModel
+	DeviceStructure *resources.DeviceModel
 	Update          Updater
 }
 
-type Updater func(ressources.DatagramType, spine.SpineConnection)
+type Updater func(resources.DatagramType, spine.SpineConnection)
 
 func NewEebusNode(hostname string, isGateway bool, certName string, devId string, brand string, devType string) *EebusNode {
-	deviceModel := &ressources.DeviceModel{}
+	deviceModel := &resources.DeviceModel{}
 	newEebusNode := &EebusNode{isGateway, nil, deviceModel, nil}
 	newEebusNode.SpineNode = spine.NewSpineNode(hostname, isGateway, deviceModel, newEebusNode.SubscriptionNofity, certName, devId, brand, devType)
 	return newEebusNode
 }
 
-func (eebusNode *EebusNode) SubscriptionNofity(datagram ressources.DatagramType, conn spine.SpineConnection) {
+func (eebusNode *EebusNode) SubscriptionNofity(datagram resources.DatagramType, conn spine.SpineConnection) {
 	if eebusNode.Update != nil {
 		eebusNode.Update(datagram, conn)
 	}

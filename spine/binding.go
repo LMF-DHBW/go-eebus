@@ -2,16 +2,16 @@ package spine
 
 import (
 	"encoding/xml"
-	"github.com/LMF-DHBW/go-eebus/ressources"
+	"github.com/LMF-DHBW/go-eebus/resources"
 	"log"
 )
 
-func (conn *SpineConnection) sendBindingRequest(EntityAddress int, FeatureAddress int, DestinationAddr *ressources.FeatureAddressType, FeatureType string) {
-	clientAddr := ressources.MakeFeatureAddress(conn.OwnDevice.DeviceAddress, EntityAddress, FeatureAddress)
+func (conn *SpineConnection) sendBindingRequest(EntityAddress int, FeatureAddress int, DestinationAddr *resources.FeatureAddressType, FeatureType string) {
+	clientAddr := resources.MakeFeatureAddress(conn.OwnDevice.DeviceAddress, EntityAddress, FeatureAddress)
 	conn.SendXML(
 		conn.OwnDevice.MakeHeader(EntityAddress, FeatureAddress, DestinationAddr, "call", conn.MsgCounter, true),
-		ressources.MakePayload("nodeManagementBindingRequestCall", &ressources.NodeManagementBindingRequestCall{
-			&ressources.BindingManagementRequestCallType{
+		resources.MakePayload("nodeManagementBindingRequestCall", &resources.NodeManagementBindingRequestCall{
+			&resources.BindingManagementRequestCallType{
 				ClientAddress:     clientAddr,
 				ServerAddress:     DestinationAddr,
 				ServerFeatureType: FeatureType,
@@ -19,13 +19,13 @@ func (conn *SpineConnection) sendBindingRequest(EntityAddress int, FeatureAddres
 		}))
 	answer, ok := conn.RecieveTimeout(10)
 	if ok {
-		var Function *ressources.ResultElement
+		var Function *resources.ResultElement
 		err := xml.Unmarshal([]byte(answer.Payload.Cmd.Function), &Function)
 		if err == nil {
 			if Function.ErrorNumber == 0 {
 				log.Println("Binding to: ", DestinationAddr.Device)
 
-				newEntry := &ressources.BindSubscribeEntry{
+				newEntry := &resources.BindSubscribeEntry{
 					ClientAddress: *clientAddr,
 					ServerAddress: *DestinationAddr,
 				}
@@ -38,8 +38,8 @@ func (conn *SpineConnection) sendBindingRequest(EntityAddress int, FeatureAddres
 	}
 }
 
-func (conn *SpineConnection) processBindingRequest(datagram *ressources.DatagramType) {
-	var Function *ressources.NodeManagementBindingRequestCall
+func (conn *SpineConnection) processBindingRequest(datagram *resources.DatagramType) {
+	var Function *resources.NodeManagementBindingRequestCall
 	err := xml.Unmarshal([]byte(datagram.Payload.Cmd.Function), &Function)
 
 	entitiyAddr := Function.BindingRequest.ServerAddress.Entity
@@ -51,7 +51,7 @@ func (conn *SpineConnection) processBindingRequest(datagram *ressources.Datagram
 
 	if err == nil && isValidRequest && conn.OwnDevice.Entities[entitiyAddr].Features[featureAddr].MaxBindings > numBindings {
 		log.Println("Binding to: ", Function.BindingRequest.ClientAddress.Device)
-		newEntry := &ressources.BindSubscribeEntry{
+		newEntry := &resources.BindSubscribeEntry{
 			ClientAddress: *Function.BindingRequest.ClientAddress,
 			ServerAddress: *Function.BindingRequest.ServerAddress,
 		}
@@ -62,11 +62,11 @@ func (conn *SpineConnection) processBindingRequest(datagram *ressources.Datagram
 		serverAddr := Function.BindingRequest.ServerAddress
 		conn.SendXML(
 			conn.OwnDevice.MakeHeader(serverAddr.Entity, serverAddr.Feature, Function.BindingRequest.ClientAddress, "result", conn.MsgCounter, false),
-			ressources.MakePayload("resultData", ressources.ResultData(0, "positive ackknowledgement for binding request")))
+			resources.MakePayload("resultData", resources.ResultData(0, "positive ackknowledgement for binding request")))
 	} else {
 		ownAddr := datagram.Header.AddressDestination
 		conn.SendXML(
 			conn.OwnDevice.MakeHeader(ownAddr.Entity, ownAddr.Feature, datagram.Header.AddressSource, "result", conn.MsgCounter, false),
-			ressources.MakePayload("resultData", ressources.ResultData(1, "negative ackknowledgement for binding request")))
+			resources.MakePayload("resultData", resources.ResultData(1, "negative ackknowledgement for binding request")))
 	}
 }

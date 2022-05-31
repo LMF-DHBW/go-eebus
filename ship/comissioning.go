@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/LMF-DHBW/go-eebus/ressources"
+	"github.com/LMF-DHBW/go-eebus/resources"
 )
 
 func ReadSkis() ([]string, []string) {
@@ -21,7 +21,7 @@ func ReadSkis() ([]string, []string) {
 	}
 
 	file, err := os.Open("skis.txt")
-	ressources.CheckError(err)
+	resources.CheckError(err)
 	defer file.Close()
 
 	var skis []string
@@ -35,13 +35,13 @@ func ReadSkis() ([]string, []string) {
 			devices = append(devices, line[1])
 		}
 	}
-	ressources.CheckError(scanner.Err())
+	resources.CheckError(scanner.Err())
 	return skis, devices
 }
 
 func WriteSkis(newSkis []string, newDevices []string) {
 	file, err := os.OpenFile("skis.txt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	ressources.CheckError(err)
+	resources.CheckError(err)
 	defer file.Close()
 	if len(newSkis) == len(newDevices) {
 		result := ""
@@ -56,7 +56,7 @@ func WriteSkis(newSkis []string, newDevices []string) {
 		}
 
 		_, err = file.WriteString(result)
-		ressources.CheckError(err)
+		resources.CheckError(err)
 	}
 
 }
@@ -66,7 +66,7 @@ func (shipNode *ShipNode) getSki() string {
 	var err error
 
 	file, err = os.ReadFile(shipNode.CertName + ".crt")
-	ressources.CheckError(err)
+	resources.CheckError(err)
 
 	crt := string(file)
 
@@ -76,7 +76,7 @@ func (shipNode *ShipNode) getSki() string {
 	pubkey := cert.PublicKey.(*rsa.PublicKey)
 
 	publicKey, err := x509.MarshalPKIXPublicKey(pubkey)
-	ressources.CheckError(err)
+	resources.CheckError(err)
 
 	hasher := sha1.New()
 	hasher.Write(publicKey)

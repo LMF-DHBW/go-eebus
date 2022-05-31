@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/LMF-DHBW/go-eebus/ressources"
+	"github.com/LMF-DHBW/go-eebus/resources"
 
 	"github.com/grandcat/zeroconf"
 	"github.com/phayes/freeport"
@@ -20,7 +20,7 @@ type ConnectionManager func(string, *websocket.Conn)
 type ConnectionManagerSpine func(*SMEInstance, string)
 type CloseHandler func(*SMEInstance)
 type handler func([]byte)
-type dataHandler func(ressources.DatagramType)
+type dataHandler func(resources.DatagramType)
 
 type ShipNode struct {
 	serverPort            int
@@ -50,7 +50,7 @@ func NewShipNode(hostname string, IsGateway bool, certName string, devId string,
 func (shipNode *ShipNode) Start() {
 	// ShipNode start -> assign port, create server
 	port, err := freeport.GetFreePort()
-	ressources.CheckError(err)
+	resources.CheckError(err)
 	shipNode.serverPort = port
 	// Start server, Register Dns and search for other DNS entries
 	if !shipNode.IsGateway {
@@ -67,7 +67,7 @@ func (shipNode *ShipNode) handleFoundService(entry *zeroconf.ServiceEntry) {
 		log.Println("Found new service", entry.HostName, entry.Port)
 
 		skis, _ := ReadSkis()
-		if ressources.StringInSlice(strings.Split(entry.Text[3], "=")[1], skis) {
+		if resources.StringInSlice(strings.Split(entry.Text[3], "=")[1], skis) {
 			// Device is trusted
 			go shipNode.Connect(strings.Split(entry.Text[2], "=")[1], strings.Split(entry.Text[3], "=")[1])
 		} else {
@@ -91,7 +91,7 @@ func (shipNode *ShipNode) handleFoundService(entry *zeroconf.ServiceEntry) {
 func (shipNode *ShipNode) newConnection(role string, conn *websocket.Conn, ski string) {
 	skiIsNew := ""
 	skis, _ := ReadSkis()
-	if !ressources.StringInSlice(ski, skis) && shipNode.IsGateway {
+	if !resources.StringInSlice(ski, skis) && shipNode.IsGateway {
 		skiIsNew = ski
 	}
 
@@ -112,18 +112,18 @@ func (shipNode *ShipNode) newConnection(role string, conn *websocket.Conn, ski s
 
 func (shipNode *ShipNode) Connect(service string, ski string) {
 	conf, err := websocket.NewConfig(service, "http://"+shipNode.hostname)
-	ressources.CheckError(err)
+	resources.CheckError(err)
 
 	var cert tls.Certificate
 	cert, err = tls.LoadX509KeyPair(shipNode.CertName+".crt", shipNode.CertName+".key")
-	ressources.CheckError(err)
+	resources.CheckError(err)
 
 	conf.TlsConfig = &tls.Config{
 		Certificates: []tls.Certificate{cert},
 	}
 
 	conn, err := websocket.DialConfig(conf)
-	ressources.CheckError(err)
+	resources.CheckError(err)
 
 	shipNode.newConnection("client", conn, ski)
 }
@@ -144,5 +144,5 @@ func (shipNode *ShipNode) StartServer() {
 		}),
 	}
 	err := server.ListenAndServeTLS(shipNode.CertName+".crt", shipNode.CertName+".key")
-	ressources.CheckError(err)
+	resources.CheckError(err)
 }

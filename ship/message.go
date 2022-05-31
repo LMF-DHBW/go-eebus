@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/LMF-DHBW/go-eebus/ressources"
+	"github.com/LMF-DHBW/go-eebus/resources"
 
 	"golang.org/x/net/websocket"
 )
@@ -30,8 +30,8 @@ type Message struct {
 }
 
 type DataValue struct {
-	Header  HeaderType              `xml:"header"`
-	Payload ressources.DatagramType `xml:"payload"`
+	Header  HeaderType             `xml:"header"`
+	Payload resources.DatagramType `xml:"payload"`
 }
 
 type HeaderType struct {
@@ -64,7 +64,7 @@ func (SME *SMEInstance) StartCMI() {
 		}
 		SME.connectionState = "CMI_STATE_SERVER_EVALUATE"
 		Message := CmiMessage{}
-		ressources.CheckError(json.Unmarshal(msg, &Message))
+		resources.CheckError(json.Unmarshal(msg, &Message))
 		if Message.MessageType != 0 || Message.MessageValue != 0 {
 			defer SME.Connection.Close()
 		}
@@ -72,7 +72,7 @@ func (SME *SMEInstance) StartCMI() {
 			MessageType:  0,
 			MessageValue: 0,
 		})
-		ressources.CheckError(err)
+		resources.CheckError(err)
 		websocket.Message.Send(SME.Connection, bytes)
 	} else {
 		SME.connectionState = "CMI_STATE_CLIENT_SEND"
@@ -80,7 +80,7 @@ func (SME *SMEInstance) StartCMI() {
 			MessageType:  0,
 			MessageValue: 0,
 		})
-		ressources.CheckError(err)
+		resources.CheckError(err)
 		websocket.Message.Send(SME.Connection, bytes)
 		SME.connectionState = "CMI_STATE_CLIENT_WAIT"
 		msg := SME.RecieveTimeout(CMI_TIMEOUT)
@@ -90,7 +90,7 @@ func (SME *SMEInstance) StartCMI() {
 		}
 		SME.connectionState = "CMI_STATE_CLIENT_EVALUATE"
 		Message := CmiMessage{}
-		ressources.CheckError(json.Unmarshal(msg, &Message))
+		resources.CheckError(json.Unmarshal(msg, &Message))
 		if Message.MessageType != 0 || Message.MessageValue != 0 {
 			SME.Connection.Close()
 		}
@@ -129,7 +129,7 @@ func (SME *SMEInstance) Recieve(handleFunc dataHandler) {
 			break
 		}
 		Message := Message{}
-		ressources.CheckError(xml.Unmarshal(msg, &Message))
+		resources.CheckError(xml.Unmarshal(msg, &Message))
 		if Message.MessageType == 2 {
 			handleFunc(Message.MessageValue.Payload)
 		}
@@ -137,7 +137,7 @@ func (SME *SMEInstance) Recieve(handleFunc dataHandler) {
 }
 
 /* Sends messages in json format */
-func (SME *SMEInstance) Send(payload ressources.DatagramType) {
+func (SME *SMEInstance) Send(payload resources.DatagramType) {
 	bytes, err := xml.Marshal(Message{
 		MessageType: 2,
 		MessageValue: DataValue{
@@ -147,6 +147,6 @@ func (SME *SMEInstance) Send(payload ressources.DatagramType) {
 			Payload: payload,
 		},
 	})
-	ressources.CheckError(err)
+	resources.CheckError(err)
 	websocket.Message.Send(SME.Connection, bytes)
 }

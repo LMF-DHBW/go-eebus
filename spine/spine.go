@@ -5,14 +5,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LMF-DHBW/go-eebus/ressources"
+	"github.com/LMF-DHBW/go-eebus/resources"
 	"github.com/LMF-DHBW/go-eebus/ship"
 )
 
 type SpineNode struct {
 	ShipNode           *ship.ShipNode
 	Connections        []*SpineConnection
-	DeviceStructure    *ressources.DeviceModel
+	DeviceStructure    *resources.DeviceModel
 	Bindings           []*BindSubscribe
 	Subscriptions      []*BindSubscribe
 	SubscriptionNofity Notifier
@@ -20,10 +20,20 @@ type SpineNode struct {
 
 type BindSubscribe struct {
 	Conn               *SpineConnection
-	BindSubscribeEntry *ressources.BindSubscribeEntry
+	BindSubscribeEntry *resources.BindSubscribeEntry
 }
 
-func NewSpineNode(hostname string, isGateway bool, deviceModel *ressources.DeviceModel, SubscriptionNofity Notifier, certName string, devId string, brand string, devType string) *SpineNode {
+func (bindSubscribe BindSubscribe) Send(payload *resources.PayloadType) {
+	srv := bindSubscribe.BindSubscribeEntry.ServerAddress
+	clt := bindSubscribe.BindSubscribeEntry.ClientAddress
+	bindSubscribe.Conn.SendXML(
+		bindSubscribe.Conn.OwnDevice.MakeHeader(srv.Entity, srv.Feature,
+			resources.MakeFeatureAddress(clt.Device, clt.Entity, clt.Feature),
+			"notify", bindSubscribe.Conn.MsgCounter, false),
+		payload)
+}
+
+func NewSpineNode(hostname string, isGateway bool, deviceModel *resources.DeviceModel, SubscriptionNofity Notifier, certName string, devId string, brand string, devType string) *SpineNode {
 	return &SpineNode{ship.NewShipNode(hostname, isGateway, certName, devId, brand, devType), make([]*SpineConnection, 0), deviceModel, make([]*BindSubscribe, 0), make([]*BindSubscribe, 0), SubscriptionNofity}
 }
 
@@ -45,7 +55,7 @@ func (spineNode *SpineNode) newConnection(SME *ship.SMEInstance, newSki string) 
 
 			time.Sleep(time.Second / 10)
 			skis, devices := ship.ReadSkis()
-			newSpineConnection.SendXML(newSpineConnection.OwnDevice.MakeHeader(0, 0, ressources.MakeFeatureAddress("", 0, 0), "comissioning", newSpineConnection.MsgCounter, false), ressources.MakePayload("saveSkis", &ressources.ComissioningNewSkis{
+			newSpineConnection.SendXML(newSpineConnection.OwnDevice.MakeHeader(0, 0, resources.MakeFeatureAddress("", 0, 0), "comissioning", newSpineConnection.MsgCounter, false), resources.MakePayload("saveSkis", &resources.ComissioningNewSkis{
 				Skis:    strings.Join(skis, ";"),
 				Devices: strings.Join(devices, ";"),
 			}))
@@ -56,7 +66,7 @@ func (spineNode *SpineNode) newConnection(SME *ship.SMEInstance, newSki string) 
 				skis, devices := ship.ReadSkis()
 				log.Println("Sending new SKIs")
 				for _, conn := range spineNode.Connections {
-					conn.SendXML(conn.OwnDevice.MakeHeader(0, 0, ressources.MakeFeatureAddress("", 0, 0), "comissioning", conn.MsgCounter, false), ressources.MakePayload("saveSkis", &ressources.ComissioningNewSkis{
+					conn.SendXML(conn.OwnDevice.MakeHeader(0, 0, resources.MakeFeatureAddress("", 0, 0), "comissioning", conn.MsgCounter, false), resources.MakePayload("saveSkis", &resources.ComissioningNewSkis{
 						Skis:    strings.Join(skis, ";"),
 						Devices: strings.Join(devices, ";"),
 					}))
@@ -71,14 +81,14 @@ func (spineNode *SpineNode) newConnection(SME *ship.SMEInstance, newSki string) 
 	newSpineConnection.StartRecieveHandler()
 }
 
-func (spineNode *SpineNode) newBindSubscribe(bindSubscribe string, conn *SpineConnection, entry *ressources.BindSubscribeEntry) {
+func (spineNode *SpineNode) newBindSubscribe(bindSubscribe string, conn *SpineConnection, entry *resources.BindSubscribeEntry) {
 	if bindSubscribe == "binding" {
 		log.Println("added binding")
 		spineNode.Bindings = append(spineNode.Bindings, &BindSubscribe{
 			conn, entry,
 		})
 		// Add to binding list for bind information
-		ownBindings := spineNode.DeviceStructure.Entities[0].Features[0].Functions[1].Function.(*ressources.NodeManagementBindingData)
+		ownBindings := spineNode.DeviceStructure.Entities[0].Features[0].Functions[1].Function.(*resources.NodeManagementBindingData)
 		ownBindings.BindingEntries = append(ownBindings.BindingEntries, entry)
 		spineNode.DeviceStructure.Entities[0].Features[0].Functions[1].Function = ownBindings
 
@@ -87,7 +97,7 @@ func (spineNode *SpineNode) newBindSubscribe(bindSubscribe string, conn *SpineCo
 			conn, entry,
 		})
 		// Add to subscription list for subscription information
-		ownSubscriptions := spineNode.DeviceStructure.Entities[0].Features[0].Functions[2].Function.(*ressources.NodeManagementSubscriptionData)
+		ownSubscriptions := spineNode.DeviceStructure.Entities[0].Features[0].Functions[2].Function.(*resources.NodeManagementSubscriptionData)
 		ownSubscriptions.SubscriptionEntries = append(ownSubscriptions.SubscriptionEntries, entry)
 		spineNode.DeviceStructure.Entities[0].Features[0].Functions[2].Function = ownSubscriptions
 	}
@@ -98,11 +108,11 @@ func (spineNode *SpineNode) newBindSubscribe(bindSubscribe string, conn *SpineCo
 		// Only send to right partners
 		if e.BindSubscribeEntry.ServerAddress.Feature == 0 && e.BindSubscribeEntry.ServerAddress.Entity == 0 {
 			e.Conn.SendXML(
-				e.Conn.OwnDevice.MakeHeader(0, 0, ressources.MakeFeatureAddress(e.BindSubscribeEntry.ClientAddress.Device, e.BindSubscribeEntry.ClientAddress.Entity, e.BindSubscribeEntry.ClientAddress.Feature), "notify", e.Conn.MsgCounter, false),
-				ressources.MakePayload("nodeManagementBindingData", spineNode.DeviceStructure.Entities[0].Features[0].Functions[1].Function))
+				e.Conn.OwnDevice.MakeHeader(0, 0, resources.MakeFeatureAddress(e.BindSubscribeEntry.ClientAddress.Device, e.BindSubscribeEntry.ClientAddress.Entity, e.BindSubscribeEntry.ClientAddress.Feature), "notify", e.Conn.MsgCounter, false),
+				resources.MakePayload("nodeManagementBindingData", spineNode.DeviceStructure.Entities[0].Features[0].Functions[1].Function))
 			e.Conn.SendXML(
-				e.Conn.OwnDevice.MakeHeader(0, 0, ressources.MakeFeatureAddress(e.BindSubscribeEntry.ClientAddress.Device, e.BindSubscribeEntry.ClientAddress.Entity, e.BindSubscribeEntry.ClientAddress.Feature), "notify", e.Conn.MsgCounter, false),
-				ressources.MakePayload("nodeManagementSubscriptionData", spineNode.DeviceStructure.Entities[0].Features[0].Functions[2].Function))
+				e.Conn.OwnDevice.MakeHeader(0, 0, resources.MakeFeatureAddress(e.BindSubscribeEntry.ClientAddress.Device, e.BindSubscribeEntry.ClientAddress.Entity, e.BindSubscribeEntry.ClientAddress.Feature), "notify", e.Conn.MsgCounter, false),
+				resources.MakePayload("nodeManagementSubscriptionData", spineNode.DeviceStructure.Entities[0].Features[0].Functions[2].Function))
 		}
 	}
 }
@@ -116,6 +126,9 @@ func (spineNode *SpineNode) closeHandler(SME *ship.SMEInstance) {
 
 			spineNode.ShipNode.SME[i] = spineNode.ShipNode.SME[len(spineNode.ShipNode.SME)-1]
 			spineNode.ShipNode.SME = spineNode.ShipNode.SME[:len(spineNode.ShipNode.SME)-1]
+
+			spineNode.ShipNode.Requests[i] = spineNode.ShipNode.Requests[len(spineNode.ShipNode.Requests)-1]
+			spineNode.ShipNode.Requests = spineNode.ShipNode.Requests[:len(spineNode.ShipNode.Requests)-1]
 			log.Println("Connection closed!")
 			break
 		}

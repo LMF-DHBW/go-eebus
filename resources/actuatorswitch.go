@@ -1,4 +1,4 @@
-package ressources
+package resources
 
 type Notifier func(string, string, FeatureAddressType)
 
@@ -11,7 +11,7 @@ type DescriptionElement struct {
 	Description string `xml:"description"`
 }
 
-func ActuatorSwitch(role string, label string, description string, ChangeNotify Notifier) []*FunctionModel {
+func ActuatorSwitch(label string, description string, ChangeNotify Notifier) []*FunctionModel {
 	return []*FunctionModel{
 		{
 			FunctionName: "actuatorSwitchData",

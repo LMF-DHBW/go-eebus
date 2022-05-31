@@ -1,4 +1,4 @@
-package ressources
+package resources
 
 type NodeManagementDetailedDiscovery struct {
 	SpecificationVersionList []*NodeManagementSpecificationVersionListType            `xml:"specificationVersionList"`

@@ -1,4 +1,4 @@
-package ressources
+package resources
 
 type NodeManagementBindingData struct {
 	BindingEntries []*BindSubscribeEntry `xml:"bindingEntries"`

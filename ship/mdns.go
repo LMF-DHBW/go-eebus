@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/LMF-DHBW/go-eebus/ressources"
+	"github.com/LMF-DHBW/go-eebus/resources"
 
 	"github.com/grandcat/zeroconf"
 )
@@ -15,7 +15,7 @@ func (shipNode *ShipNode) BrowseDns() {
 	log.Println("Browsing for entries")
 	// Discover all ship services on the network
 	resolver, err := zeroconf.NewResolver(nil)
-	ressources.CheckError(err)
+	resources.CheckError(err)
 
 	entries := make(chan *zeroconf.ServiceEntry)
 	go func(results <-chan *zeroconf.ServiceEntry) {
@@ -27,7 +27,7 @@ func (shipNode *ShipNode) BrowseDns() {
 	ctx, _ := context.WithCancel(context.Background())
 
 	err = resolver.Browse(ctx, "_ship._tcp", "local.", entries)
-	ressources.CheckError(err)
+	resources.CheckError(err)
 
 	<-ctx.Done()
 }
@@ -40,7 +40,7 @@ func (shipNode *ShipNode) RegisterDns() {
 	txtRecord := []string{"txtvers=1", "id=" + id, "path=wss://" + shipNode.hostname + ":" + port, "SKI=" + shipNode.getSki(), "register=true", "brand=" + shipNode.brand, "type=" + shipNode.devType}
 	log.Println("Registering: ", txtRecord)
 	server, err := zeroconf.Register("Device "+port, "_ship._tcp", "local.", shipNode.serverPort, txtRecord, nil)
-	ressources.CheckError(err)
+	resources.CheckError(err)
 
 	defer server.Shutdown()
 	defer log.Println("Registering stopped")

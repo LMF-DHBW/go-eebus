@@ -1,4 +1,4 @@
-package ressources
+package resources
 
 type TimePeriodType struct {
 	StartTime string `xml:"startTime"`
