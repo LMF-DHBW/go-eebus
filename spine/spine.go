@@ -23,13 +23,13 @@ type BindSubscribe struct {
 	BindSubscribeEntry *resources.BindSubscribeEntry
 }
 
-func (bindSubscribe BindSubscribe) Send(payload *resources.PayloadType) {
+func (bindSubscribe BindSubscribe) Send(msgClassifier string, payload *resources.PayloadType) {
 	srv := bindSubscribe.BindSubscribeEntry.ServerAddress
 	clt := bindSubscribe.BindSubscribeEntry.ClientAddress
 	bindSubscribe.Conn.SendXML(
 		bindSubscribe.Conn.OwnDevice.MakeHeader(srv.Entity, srv.Feature,
 			resources.MakeFeatureAddress(clt.Device, clt.Entity, clt.Feature),
-			"notify", bindSubscribe.Conn.MsgCounter, false),
+			msgClassifier, bindSubscribe.Conn.MsgCounter, false),
 		payload)
 }
 
