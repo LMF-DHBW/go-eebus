@@ -127,8 +127,6 @@ func (spineNode *SpineNode) closeHandler(SME *ship.SMEInstance) {
 			spineNode.ShipNode.SME[i] = spineNode.ShipNode.SME[len(spineNode.ShipNode.SME)-1]
 			spineNode.ShipNode.SME = spineNode.ShipNode.SME[:len(spineNode.ShipNode.SME)-1]
 
-			spineNode.ShipNode.Requests[i] = spineNode.ShipNode.Requests[len(spineNode.ShipNode.Requests)-1]
-			spineNode.ShipNode.Requests = spineNode.ShipNode.Requests[:len(spineNode.ShipNode.Requests)-1]
 			log.Println("Connection closed!")
 			break
 		}

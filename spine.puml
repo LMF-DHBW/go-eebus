@@ -1,0 +1,75 @@
+namespace spine {
+    class BindSubscribe << (S,Aquamarine) >> {
+        + Conn *SpineConnection
+        + BindSubscribeEntry *resources.BindSubscribeEntry
+
+        + Send(payload *resources.PayloadType) 
+
+    }
+    class BindSubscribeInfo << (S,Aquamarine) >> {
+        + BindSubscribe string
+        + BindSubscribeEntry *resources.BindSubscribeEntry
+
+    }
+    class Feature << (S,Aquamarine) >> {
+        + EntityType string
+        + FeatureType string
+        + FeatureAddress resources.FeatureAddressType
+        + FunctionName string
+        + CurrentState string
+
+    }
+    class SpineConnection << (S,Aquamarine) >> {
+        - recieveChan <font color=blue>chan</font> resources.DatagramType
+        - bindSubscribeNotify BindSubscribeNotify
+        - bindSubscribeInfo []*BindSubscribeInfo
+
+        + SME *ship.SMEInstance
+        + Address string
+        + MsgCounter int
+        + OwnDevice *resources.DeviceModel
+        + DiscoveryInformation *resources.NodeManagementDetailedDiscovery
+        + SubscriptionNofity Notifier
+        + Features []*Feature
+
+        - sendBindingRequest(EntityAddress int, FeatureAddress int, DestinationAddr *resources.FeatureAddressType, FeatureType string) 
+        - processBindingRequest(datagram *resources.DatagramType) 
+        - requestAllowed(bindSubscribe string, header *resources.HeaderType) bool
+        - sendSubscriptionRequest(EntityAddress int, FeatureAddress int, DestinationAddr *resources.FeatureAddressType, FeatureType string) 
+        - processSubscriptionRequest(datagram *resources.DatagramType) 
+
+        + SendXML(header *resources.HeaderType, payload *resources.PayloadType) 
+        + StartRecieveHandler() 
+        + RecieveTimeout(seconds int) (resources.DatagramType, bool)
+        + CountBindings(serverAddr resources.FeatureAddressType) int
+        + CountSubscriptions(serverAddr resources.FeatureAddressType) int
+        + StartDetailedDiscovery() 
+
+    }
+    class SpineNode << (S,Aquamarine) >> {
+        + ShipNode *ship.ShipNode
+        + Connections []*SpineConnection
+        + DeviceStructure *resources.DeviceModel
+        + Bindings []*BindSubscribe
+        + Subscriptions []*BindSubscribe
+        + SubscriptionNofity Notifier
+
+        - newConnection(SME *ship.SMEInstance, newSki string) 
+        - newBindSubscribe(bindSubscribe string, conn *SpineConnection, entry *resources.BindSubscribeEntry) 
+        - closeHandler(SME *ship.SMEInstance) 
+
+        + Start() 
+
+    }
+    
+    SpineNode "1" o-- "0..*" SpineConnection
+    
+    SpineNode "1" o-- "0..*" BindSubscribe
+    
+    BindSubscribe "1" *-- "0..*" SpineConnection
+    
+    SpineConnection "1" o-- "0..*" Feature
+    
+    SpineConnection "1" o-- "0..*" BindSubscribeInfo
+    
+}

@@ -1,0 +1,75 @@
+namespace ship {
+    class CmiMessage << (S,Aquamarine) >> {
+        + MessageType int
+        + MessageValue int
+
+    }
+    class DataValue << (S,Aquamarine) >> {
+        + Header HeaderType
+        + Payload resources.DatagramType
+
+    }
+    class HeaderType << (S,Aquamarine) >> {
+        + ProtocollId string
+
+    }
+    class Message << (S,Aquamarine) >> {
+        + MessageType int
+        + MessageValue DataValue
+
+    }
+    class Request << (S,Aquamarine) >> {
+        + Path string
+        + Id string
+        + Ski string
+
+    }
+    class SMEInstance << (S,Aquamarine) >> {
+        - role string
+        - connectionState string
+        - closeHandler CloseHandler
+
+        + Connection *websocket.Conn
+        + Ski string
+
+        + RecieveTimeout(seconds int) []byte
+        + StartCMI() 
+        + RecieveOnce(handleFunc handler) 
+        + Recieve(handleFunc dataHandler) 
+        + Send(payload resources.DatagramType) 
+
+    }
+    class ShipNode << (S,Aquamarine) >> {
+        - serverPort int
+        - hostname string
+        - devId string
+        - brand string
+        - devType string
+
+        + IsGateway bool
+        + SME []*SMEInstance
+        + Requests []*Request
+        + SpineConnectionNotify ConnectionManagerSpine
+        + SpineCloseHandler CloseHandler
+        + CertName string
+
+        - getSki() string
+        - handleFoundService(entry *zeroconf.ServiceEntry) 
+        - newConnection(role string, conn *websocket.Conn, ski string) 
+
+        + BrowseDns() 
+        + RegisterDns() 
+        + Start() 
+        + Connect(service string, ski string) 
+        + StartServer() 
+
+    }
+
+    ShipNode "1" o-- "0..*" SMEInstance
+    
+    ShipNode "1" o-- "0..*" Request
+    
+    Message "1" *-- "1" DataValue
+    
+    DataValue "1" *-- "1" HeaderType
+}
