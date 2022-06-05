@@ -1,0 +1,101 @@
+namespace ressources {
+    class NetworkManagementDeviceDescriptionDataType << (S,Aquamarine) >> {
+        + DeviceAddress *DeviceAddressType
+        + DeviceType string
+        + Description string
+
+    }
+    class NetworkManagementEntityDescritpionDataType << (S,Aquamarine) >> {
+        + EntityAddress *EntityAddressType
+        + EntityType string
+        + Description string
+
+    }
+    class NetworkManagementFeatureInformationType << (S,Aquamarine) >> {
+        + FeatureAddress *FeatureAddressType
+        + FeatureType string
+        + Role string
+        + SupportedFunction *FunctionPropertyType
+        + Description string
+
+    }
+
+    class NodeManagementDetailedDiscoveryDeviceInformationType << (S,Aquamarine) >> {
+        + Description *NetworkManagementDeviceDescriptionDataType
+
+    }
+    class NodeManagementDetailedDiscoveryEntityInformationType << (S,Aquamarine) >> {
+        + Description *NetworkManagementEntityDescritpionDataType
+
+    }
+    class NodeManagementDetailedDiscoveryFeatureInformationType << (S,Aquamarine) >> {
+        + Description *NetworkManagementFeatureInformationType
+
+    }
+
+
+    class NodeManagementDetailedDiscovery << (S,Aquamarine) >> {
+        + SpecificationVersionList []*NodeManagementSpecificationVersionListType
+        + DeviceInformation *NodeManagementDetailedDiscoveryDeviceInformationType
+        + EntityInformation []*NodeManagementDetailedDiscoveryEntityInformationType
+        + FeatureInformation []*NodeManagementDetailedDiscoveryFeatureInformationType
+
+    }
+    class NodeManagementDetailedDiscoveryDeviceInformationType << (S,Aquamarine) >> {
+        + Description *NetworkManagementDeviceDescriptionDataType
+
+    }
+    class NodeManagementDetailedDiscoveryEntityInformationType << (S,Aquamarine) >> {
+        + Description *NetworkManagementEntityDescritpionDataType
+
+    }
+    class NodeManagementDetailedDiscoveryFeatureInformationType << (S,Aquamarine) >> {
+        + Description *NetworkManagementFeatureInformationType
+
+    }
+    class NodeManagementSpecificationVersionListType << (S,Aquamarine) >> {
+        + SpecificationVersion string
+
+    }
+
+        class FunctionPropertyType << (S,Aquamarine) >> {
+        + Function string
+        + PossibleOperations string
+
+    }
+
+    class EntityAddressType << (S,Aquamarine) >> {
+        + Device string
+        + Entity int
+
+    }
+
+    class DeviceAddressType << (S,Aquamarine) >> {
+        + Device string
+
+    }
+
+    class FeatureAddressType << (S,Aquamarine) >> {
+        + Device string
+        + Entity int
+        + Feature int
+
+    }
+
+    NetworkManagementFeatureInformationType "1" *-- "1" FeatureAddressType
+
+    NetworkManagementFeatureInformationType "1" *-- "1" FunctionPropertyType
+    NetworkManagementDeviceDescriptionDataType "1" *-- "1" DeviceAddressType
+    NetworkManagementEntityDescritpionDataType "1" *-- "1" EntityAddressType
+
+    NodeManagementDetailedDiscoveryFeatureInformationType "1" *-- "1" NetworkManagementFeatureInformationType
+    
+    NodeManagementDetailedDiscoveryEntityInformationType "1" *-- "1" NetworkManagementEntityDescritpionDataType
+    
+    NodeManagementDetailedDiscoveryDeviceInformationType "1" *-- "1" NetworkManagementDeviceDescriptionDataType    
+    
+    NodeManagementDetailedDiscovery "1" *-- "*" NodeManagementSpecificationVersionListType
+    NodeManagementDetailedDiscovery "1" *-- "1" NodeManagementDetailedDiscoveryDeviceInformationType
+    NodeManagementDetailedDiscovery "1" *-- "*" NodeManagementDetailedDiscoveryEntityInformationType
+    NodeManagementDetailedDiscovery "1" *-- "*" NodeManagementDetailedDiscoveryFeatureInformationType
+}

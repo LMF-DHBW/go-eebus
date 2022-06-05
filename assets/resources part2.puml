@@ -1,0 +1,166 @@
+namespace ressources {
+    class BindSubscribeEntry << (S,Aquamarine) >> {
+        + ClientAddress FeatureAddressType
+        + ServerAddress FeatureAddressType
+
+    }
+
+    class CmdType << (S,Aquamarine) >> {
+        + FunctionName string
+        + Function string
+
+    }
+    class ComissioningNewSkis << (S,Aquamarine) >> {
+        + Skis string
+        + Devices string
+
+    }
+    class DatagramType << (S,Aquamarine) >> {
+        + Header *HeaderType
+        + Payload *PayloadType
+
+    }
+    class DescriptionElement << (S,Aquamarine) >> {
+        + Label string
+        + Description string
+
+    }
+    class DeviceAddressType << (S,Aquamarine) >> {
+        + Device string
+
+    }
+    class DeviceModel << (S,Aquamarine) >> {
+        + DeviceType string
+        + DeviceAddress string
+        + Description string
+        + Entities []*EntityModel
+
+        + CreateNodeManagement(isGateway bool) *FeatureModel
+        + MakeHeader(entity int, feature int, addressDestination *FeatureAddressType, cmdClassifier string, msgCounter int, ackRequest bool) *HeaderType
+
+    }
+    class EntityAddressType << (S,Aquamarine) >> {
+        + Device string
+        + Entity int
+
+    }
+    class EntityModel << (S,Aquamarine) >> {
+        + EntityType string
+        + EntityAddress int
+        + Description string
+        + Features []*FeatureModel
+
+    }
+    class FeatureAddressType << (S,Aquamarine) >> {
+        + Device string
+        + Entity int
+        + Feature int
+
+    }
+    class FeatureModel << (S,Aquamarine) >> {
+        + FeatureType string
+        + FeatureAddress int
+        + Role string
+        + Description string
+        + Functions []*FunctionModel
+        + BindingTo []string
+        + SubscriptionTo []string
+        + MaxBindings int
+        + MaxSubscriptions int
+
+    }
+    class FunctionElement << (S,Aquamarine) >> {
+        + Function string
+
+    }
+    class FunctionModel << (S,Aquamarine) >> {
+        + FunctionName string
+        + ChangeNotify Notifier
+        + Function <font color=blue>interface</font>{}
+
+    }
+    class FunctionPropertyType << (S,Aquamarine) >> {
+        + Function string
+        + PossibleOperations string
+
+    }
+    class HeaderType << (S,Aquamarine) >> {
+        + SpecificationVersion string
+        + AddressSource *FeatureAddressType
+        + AddressDestination *FeatureAddressType
+        + MsgCounter int
+        + CmdClassifier string
+        + Timestamp string
+        + AckRequest bool
+
+    }
+    class MeasurementDataType << (S,Aquamarine) >> {
+        + ValueType string
+        + Timestamp string
+        + Value float64
+        + EvaluationPeriod TimePeriodType
+        + ValueSource string
+        + ValueTendency string
+        + ValueState string
+
+    }
+    class MeasurementDescriptionDataType << (S,Aquamarine) >> {
+        + MeasurementType string
+        + Unit string
+        + ScopeType string
+        + Label string
+        + Description string
+
+    }
+    
+    class NodeManagementBindingData << (S,Aquamarine) >> {
+        + BindingEntries []*BindSubscribeEntry
+
+    }
+
+
+    class NodeManagementSubscriptionData << (S,Aquamarine) >> {
+        + SubscriptionEntries []*BindSubscribeEntry
+
+    }
+
+    class PayloadType << (S,Aquamarine) >> {
+        + Cmd *CmdType
+
+    }
+    class ResultElement << (S,Aquamarine) >> {
+        + ErrorNumber int
+        + Description string
+
+    }
+
+    class TimePeriodType << (S,Aquamarine) >> {
+        + StartTime string
+        + EndTime string
+
+    }
+    
+    BindSubscribeEntry "1" *-- "2" FeatureAddressType
+    
+
+    HeaderType "1" *-- "2" FeatureAddressType
+        
+    NodeManagementBindingData "1" *-- "*" BindSubscribeEntry
+    
+    NodeManagementSubscriptionData "1" *-- "*" BindSubscribeEntry
+    
+    PayloadType "1" *-- "1" CmdType
+    
+    DatagramType "1" *-- "1" PayloadType
+    
+    DatagramType "1" *-- "1" HeaderType
+    
+    
+    MeasurementDataType "1" *-- "1" TimePeriodType
+    
+    DeviceModel "1" *-- "*" EntityModel
+    
+    EntityModel "1" *-- "*" FeatureModel
+    
+    FeatureModel "1" *-- "*" FunctionModel
+}
