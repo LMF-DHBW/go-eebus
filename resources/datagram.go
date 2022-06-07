@@ -67,7 +67,7 @@ func (device *DeviceModel) CreateNodeManagement(isGateway bool) *FeatureModel {
 	subscriptions := []string{}
 	bindings := []string{}
 	if isGateway {
-		subscriptions = append(subscriptions, []string{"ActuatorSwitch", "Measurement", "NodeManagement"}...)
+		subscriptions = append(subscriptions, []string{"ActuatorSwitch", "MeasurementTemp", "MeasurementSolar", "MeasurementBattery", "Measurement", "NodeManagement", "ActuatorSwitch1", "ActuatorSwitch2"}...)
 		bindings = append(bindings, []string{"ActuatorSwitch", "ActuatorSwitch1", "ActuatorSwitch2"}...)
 	}
 	return &FeatureModel{
