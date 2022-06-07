@@ -126,6 +126,11 @@ func (spineNode *SpineNode) closeHandler(SME *ship.SMEInstance) {
 				if binding.Conn == spineNode.Connections[i] {
 					spineNode.Bindings[j] = spineNode.Bindings[len(spineNode.Bindings)-1]
 					spineNode.Bindings = spineNode.Bindings[:len(spineNode.Bindings)-1]
+
+					ownBindings := spineNode.DeviceStructure.Entities[0].Features[0].Functions[1].Function.(*resources.NodeManagementBindingData)
+					ownBindings.BindingEntries[j] = ownBindings.BindingEntries[len(ownBindings.BindingEntries)-1]
+					ownBindings.BindingEntries = ownBindings.BindingEntries[:len(ownBindings.BindingEntries)-1]
+					spineNode.DeviceStructure.Entities[0].Features[0].Functions[1].Function = ownBindings
 				}
 			}
 
@@ -133,6 +138,22 @@ func (spineNode *SpineNode) closeHandler(SME *ship.SMEInstance) {
 				if subscription.Conn == spineNode.Connections[i] {
 					spineNode.Subscriptions[j] = spineNode.Subscriptions[len(spineNode.Subscriptions)-1]
 					spineNode.Subscriptions = spineNode.Subscriptions[:len(spineNode.Subscriptions)-1]
+
+					ownSubscriptions := spineNode.DeviceStructure.Entities[0].Features[0].Functions[2].Function.(*resources.NodeManagementSubscriptionData)
+					ownSubscriptions.SubscriptionEntries[j] = ownSubscriptions.SubscriptionEntries[len(ownSubscriptions.SubscriptionEntries)-1]
+					ownSubscriptions.SubscriptionEntries = ownSubscriptions.SubscriptionEntries[:len(ownSubscriptions.SubscriptionEntries)-1]
+					spineNode.DeviceStructure.Entities[0].Features[0].Functions[2].Function = ownSubscriptions
+				}
+			}
+
+			for _, e := range spineNode.Subscriptions {
+				if e.BindSubscribeEntry.ServerAddress.Feature == 0 && e.BindSubscribeEntry.ServerAddress.Entity == 0 {
+					e.Conn.SendXML(
+						e.Conn.OwnDevice.MakeHeader(0, 0, resources.MakeFeatureAddress(e.BindSubscribeEntry.ClientAddress.Device, e.BindSubscribeEntry.ClientAddress.Entity, e.BindSubscribeEntry.ClientAddress.Feature), "notify", e.Conn.MsgCounter, false),
+						resources.MakePayload("nodeManagementBindingData", spineNode.DeviceStructure.Entities[0].Features[0].Functions[1].Function))
+					e.Conn.SendXML(
+						e.Conn.OwnDevice.MakeHeader(0, 0, resources.MakeFeatureAddress(e.BindSubscribeEntry.ClientAddress.Device, e.BindSubscribeEntry.ClientAddress.Entity, e.BindSubscribeEntry.ClientAddress.Feature), "notify", e.Conn.MsgCounter, false),
+						resources.MakePayload("nodeManagementSubscriptionData", spineNode.DeviceStructure.Entities[0].Features[0].Functions[2].Function))
 				}
 			}
 
