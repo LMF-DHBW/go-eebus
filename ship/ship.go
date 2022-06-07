@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/LMF-DHBW/go-eebus/resources"
 
@@ -85,6 +86,23 @@ func (shipNode *ShipNode) handleFoundService(entry *zeroconf.ServiceEntry) {
 						Ski:  strings.Split(entry.Text[3], "=")[1],
 					})
 				}
+			} else {
+				ticker := time.NewTicker(3 * time.Second)
+				go func() {
+					for {
+						select {
+						case <-ticker.C:
+							skis, _ := ReadSkis()
+							if resources.StringInSlice(strings.Split(entry.Text[3], "=")[1], skis) {
+								go shipNode.Connect(strings.Split(entry.Text[2], "=")[1], strings.Split(entry.Text[3], "=")[1])
+							}
+						case <-time.After(120 * time.Second):
+							// Stop trying after 2 minutes
+							ticker.Stop()
+							return
+						}
+					}
+				}()
 			}
 		}
 	}
