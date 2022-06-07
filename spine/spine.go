@@ -121,9 +121,10 @@ func (spineNode *SpineNode) newBindSubscribe(bindSubscribe string, conn *SpineCo
 func (spineNode *SpineNode) closeHandler(SME *ship.SMEInstance) {
 	for i, e := range spineNode.Connections {
 		if e.SME == SME {
-
+			offset := 0
 			for j, binding := range spineNode.Bindings {
 				if binding.Conn == spineNode.Connections[i] {
+					j += offset
 					spineNode.Bindings[j] = spineNode.Bindings[len(spineNode.Bindings)-1]
 					spineNode.Bindings = spineNode.Bindings[:len(spineNode.Bindings)-1]
 
@@ -131,11 +132,14 @@ func (spineNode *SpineNode) closeHandler(SME *ship.SMEInstance) {
 					ownBindings.BindingEntries[j] = ownBindings.BindingEntries[len(ownBindings.BindingEntries)-1]
 					ownBindings.BindingEntries = ownBindings.BindingEntries[:len(ownBindings.BindingEntries)-1]
 					spineNode.DeviceStructure.Entities[0].Features[0].Functions[1].Function = ownBindings
+					offset -= 1
 				}
 			}
 
+			offset = 0
 			for j, subscription := range spineNode.Subscriptions {
 				if subscription.Conn == spineNode.Connections[i] {
+					j += offset
 					spineNode.Subscriptions[j] = spineNode.Subscriptions[len(spineNode.Subscriptions)-1]
 					spineNode.Subscriptions = spineNode.Subscriptions[:len(spineNode.Subscriptions)-1]
 
@@ -143,6 +147,7 @@ func (spineNode *SpineNode) closeHandler(SME *ship.SMEInstance) {
 					ownSubscriptions.SubscriptionEntries[j] = ownSubscriptions.SubscriptionEntries[len(ownSubscriptions.SubscriptionEntries)-1]
 					ownSubscriptions.SubscriptionEntries = ownSubscriptions.SubscriptionEntries[:len(ownSubscriptions.SubscriptionEntries)-1]
 					spineNode.DeviceStructure.Entities[0].Features[0].Functions[2].Function = ownSubscriptions
+					offset -= 1
 				}
 			}
 
