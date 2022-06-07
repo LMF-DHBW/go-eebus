@@ -125,12 +125,14 @@ func (spineNode *SpineNode) closeHandler(SME *ship.SMEInstance) {
 			for j, binding := range spineNode.Bindings {
 				if binding.Conn == spineNode.Connections[i] {
 					spineNode.Bindings[j] = spineNode.Bindings[len(spineNode.Bindings)-1]
+					spineNode.Bindings = spineNode.Bindings[:len(spineNode.Bindings)-1]
 				}
 			}
 
 			for j, subscription := range spineNode.Subscriptions {
 				if subscription.Conn == spineNode.Connections[i] {
 					spineNode.Subscriptions[j] = spineNode.Subscriptions[len(spineNode.Subscriptions)-1]
+					spineNode.Subscriptions = spineNode.Subscriptions[:len(spineNode.Subscriptions)-1]
 				}
 			}
 
